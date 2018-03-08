@@ -507,10 +507,6 @@ class OpenStackClient(object):
     def __getattr__(self, attr):
         return getattr(self._client, attr)
 
-    # Proxy any unknown call to base client
-    def __getattr__(self, attr):
-        return getattr(self._client, attr)
-
     # Sugar, common to all clients
     def cosmo_plural(self, obj_type_single):
         return obj_type_single + 's'
@@ -932,5 +928,3 @@ class KeystoneClientWithSugar(OpenStackClient):
 
     def get_quota(self, obj_type_single):
         return self.KEYSTONE_INFINITE_RESOURCE_QUOTA
-
-

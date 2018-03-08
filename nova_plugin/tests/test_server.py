@@ -132,18 +132,15 @@ class TestServer(unittest.TestCase):
     @mock.patch('nova_plugin.server.start')
     @mock.patch('nova_plugin.server._handle_image_or_flavor')
     @mock.patch('nova_plugin.server._fail_on_missing_required_parameters')
-    def test_nova_server_creation_param_integrity(self, *_):
-        class MyDict(dict):
-            id = 'uid'
+    @mock.patch('openstack_plugin_common.nova_client')
+    def test_nova_server_creation_param_integrity(
+            self, mock_nova, *args):
 
-        def mock_create_server(*args, **kwargs):
-            key_args = MyDict(kwargs)
-            self.assertIn('scheduler_hints', key_args)
-            self.assertEqual(key_args['scheduler_hints'],
-                             {'group': 'affinity-group-id'},
-                             'expecting \'scheduler_hints\' value to exist')
-            return key_args
-
-        with mock.patch('openstack_plugin_common.nova_client.servers.'
-                        'ServerManager.create', new=mock_create_server):
-            self.env.execute('install', task_retries=0)
+        self.env.execute('install', task_retries=0)
+        calls = mock_nova.Client.return_value.servers.method_calls
+        self.assertEqual(1, len(calls))
+        kws = calls[0][2]
+        self.assertIn('scheduler_hints', kws)
+        self.assertEqual(kws['scheduler_hints'],
+                         {'group': 'affinity-group-id'},
+                         'expecting \'scheduler_hints\' value to exist')
